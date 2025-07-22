@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import EquationForm from './components/EquationForm';
+import EquationResult from './components/EquationResult';
 import { EquationData } from './types';
 import { equationApi } from './services/api';
 
 const App: React.FC = () => {
   const [apiStatus, setApiStatus] = useState<'checking' | 'connected' | 'error'>('checking');
   const [createdEquations, setCreatedEquations] = useState<EquationData[]>([]);
+  const [currentEquation, setCurrentEquation] = useState<EquationData | null>(null);
+  const [showSteps, setShowSteps] = useState<boolean>(false);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'info';
     message: string;
@@ -30,6 +33,8 @@ const App: React.FC = () => {
   // Handle equation creation
   const handleEquationCreated = (equation: EquationData) => {
     setCreatedEquations(prev => [equation, ...prev]);
+    setCurrentEquation(equation);
+    setShowSteps(false); // Reset steps view
     
     // Show success notification
     setNotification({
@@ -55,6 +60,11 @@ const App: React.FC = () => {
   // Clear notification
   const clearNotification = () => {
     setNotification(null);
+  };
+
+  // Handle show/hide steps
+  const handleToggleSteps = () => {
+    setShowSteps(prev => !prev);
   };
 
   return (
@@ -159,36 +169,92 @@ const App: React.FC = () => {
         onError={handleError}
       />
 
-      {/* Recently Created Equations */}
-      {createdEquations.length > 0 && (
+      {/* Current Equation Result - Enhanced Display */}
+      {currentEquation && (
+        <EquationResult
+          equation={currentEquation}
+          showSteps={showSteps}
+          onShowSteps={handleToggleSteps}
+        />
+      )}
+
+      {/* Recently Created Equations - Compact List */}
+      {createdEquations.length > 1 && (
         <div className="card">
-          <h3>📋 Phương trình vừa tạo ({createdEquations.length})</h3>
+          <h3 style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '10px',
+            color: '#495057'
+          }}>
+            📋 Lịch sử phương trình ({createdEquations.length})
+          </h3>
           <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-            {createdEquations.map((equation, index) => (
+            {createdEquations.slice(1).map((equation, index) => (
               <div 
                 key={equation.id || index}
                 style={{
-                  padding: '15px',
-                  margin: '10px 0',
+                  padding: '12px 15px',
+                  margin: '8px 0',
                   background: '#f8f9fa',
                   borderRadius: '8px',
-                  borderLeft: '4px solid #667eea'
+                  borderLeft: '4px solid #667eea',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onClick={() => {
+                  setCurrentEquation(equation);
+                  setShowSteps(false);
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#e9ecef';
+                  e.currentTarget.style.transform = 'translateX(5px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#f8f9fa';
+                  e.currentTarget.style.transform = 'translateX(0)';
                 }}
               >
-                <div className="equation-display">
+                <div style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 'bold',
+                  color: '#2c3e50',
+                  marginBottom: '5px'
+                }}>
                   📝 {equation.equation_string}
                 </div>
-                <div className="solution-display">
-                  🎯 {equation.solution}
-                </div>
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                  ID: {equation.id} | 
-                  Loại: {equation.solution_type} | 
-                  Δ: {equation.discriminant} | 
-                  Tạo lúc: {equation.created_at ? new Date(equation.created_at).toLocaleString('vi-VN') : 'N/A'}
+                <div style={{ 
+                  fontSize: '13px', 
+                  color: '#666',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <span>
+                    ID: {equation.id} | 
+                    Loại: {equation.solution_type} | 
+                    Δ: {equation.discriminant?.toFixed(2)}
+                  </span>
+                  <span style={{ 
+                    fontSize: '12px',
+                    color: '#999'
+                  }}>
+                    {equation.created_at ? 
+                      new Date(equation.created_at).toLocaleString('vi-VN') : 
+                      'N/A'
+                    }
+                  </span>
                 </div>
               </div>
             ))}
+          </div>
+          <div style={{
+            textAlign: 'center',
+            marginTop: '15px',
+            fontSize: '14px',
+            color: '#666'
+          }}>
+            💡 Click vào phương trình để xem chi tiết
           </div>
         </div>
       )}
@@ -201,7 +267,7 @@ const App: React.FC = () => {
       }}>
         <p>🚀 GPTB2 v1.0 - React + TypeScript + Flask + MySQL</p>
         <p style={{ fontSize: '14px' }}>
-          Task 2.1: Form nhập hệ số và gọi API POST ✅
+          Task 2.2: Enhanced result display với step-by-step solution ✅
         </p>
       </div>
     </div>
