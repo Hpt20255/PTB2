@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EquationForm from './components/EquationForm';
 import EquationResult from './components/EquationResult';
+import EquationList from './components/EquationList';
 import { EquationData } from './types';
 import { equationApi } from './services/api';
 
@@ -9,6 +10,7 @@ const App: React.FC = () => {
   const [createdEquations, setCreatedEquations] = useState<EquationData[]>([]);
   const [currentEquation, setCurrentEquation] = useState<EquationData | null>(null);
   const [showSteps, setShowSteps] = useState<boolean>(false);
+  const [refreshListTrigger, setRefreshListTrigger] = useState(0);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error' | 'info';
     message: string;
@@ -35,6 +37,7 @@ const App: React.FC = () => {
     setCreatedEquations(prev => [equation, ...prev]);
     setCurrentEquation(equation);
     setShowSteps(false); // Reset steps view
+    setRefreshListTrigger(prev => prev + 1); // Trigger list refresh
     
     // Show success notification
     setNotification({
@@ -65,6 +68,38 @@ const App: React.FC = () => {
   // Handle show/hide steps
   const handleToggleSteps = () => {
     setShowSteps(prev => !prev);
+  };
+
+  // Handle equation selection from list
+  const handleEquationSelect = (equation: EquationData) => {
+    setCurrentEquation(equation);
+    setShowSteps(false);
+  };
+
+  // Handle equation update from list
+  const handleEquationUpdated = (equation: EquationData) => {
+    setCurrentEquation(equation);
+    setCreatedEquations(prev => 
+      prev.map(eq => eq.id === equation.id ? equation : eq)
+    );
+    setNotification({
+      type: 'success',
+      message: `✅ Phương trình ID ${equation.id} đã được cập nhật thành công!`
+    });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  // Handle equation deletion from list
+  const handleEquationDeleted = (id: number) => {
+    setCreatedEquations(prev => prev.filter(eq => eq.id !== id));
+    if (currentEquation?.id === id) {
+      setCurrentEquation(null);
+    }
+    setNotification({
+      type: 'success',
+      message: `✅ Phương trình ID ${id} đã được xóa thành công!`
+    });
+    setTimeout(() => setNotification(null), 5000);
   };
 
   return (
@@ -259,6 +294,15 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* Equation List - Full Database */}
+      <EquationList
+        onEquationSelect={handleEquationSelect}
+        onEquationUpdated={handleEquationUpdated}
+        onEquationDeleted={handleEquationDeleted}
+        onError={handleError}
+        refreshTrigger={refreshListTrigger}
+      />
+
       {/* Footer */}
       <div className="text-center" style={{ 
         color: 'rgba(255,255,255,0.8)', 
@@ -267,7 +311,7 @@ const App: React.FC = () => {
       }}>
         <p>🚀 GPTB2 v1.0 - React + TypeScript + Flask + MySQL</p>
         <p style={{ fontSize: '14px' }}>
-          Task 2.2: Enhanced result display với step-by-step solution ✅
+          Task 2.3: Danh sách phương trình đã lưu với CRUD operations ✅
         </p>
       </div>
     </div>

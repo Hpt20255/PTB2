@@ -155,7 +155,7 @@ const EquationResult: React.FC<EquationResultProps> = ({
         steps.push(`x = -b/(2a) = ${-b}/(2×${a}) = ${(-b/(2*a)).toFixed(6)}`);
       } else {
         const sqrtAbsDelta = Math.sqrt(Math.abs(discriminant!));
-        steps.push(`Δ < 0, phương trình có hai nghiệm phức:');
+        steps.push(`Δ < 0, phương trình có hai nghiệm phức:`);
         steps.push(`x₁ = (-b + i√|Δ|)/(2a) = (${-b} + i×${sqrtAbsDelta.toFixed(6)})/(2×${a})`);
         steps.push(`x₂ = (-b - i√|Δ|)/(2a) = (${-b} - i×${sqrtAbsDelta.toFixed(6)})/(2×${a})`);
         

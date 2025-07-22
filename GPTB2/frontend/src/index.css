@@ -331,3 +331,351 @@ code {
     flex-direction: column;
   }
 }
+
+/* Equation List Component Styles */
+.equation-list-container {
+  margin: 20px 0;
+}
+
+.equation-table-container {
+  overflow-x: auto;
+  margin: 20px 0;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.equation-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 14px;
+}
+
+.equation-table th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #5a67d8;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.equation-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.equation-row {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.equation-row:hover {
+  background-color: #f8f9fa;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.equation-row.editing {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+}
+
+.id-cell {
+  font-weight: bold;
+  color: #667eea;
+  text-align: center;
+  width: 60px;
+}
+
+.equation-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  color: #2c3e50;
+  min-width: 200px;
+}
+
+.solution-cell {
+  font-family: 'Courier New', monospace;
+  color: #28a745;
+  min-width: 150px;
+  font-size: 13px;
+}
+
+.type-cell {
+  text-align: center;
+  width: 120px;
+}
+
+.solution-type-badge {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid currentColor;
+  display: inline-block;
+}
+
+.discriminant-cell {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  width: 80px;
+}
+
+.time-cell {
+  font-size: 12px;
+  color: #6c757d;
+  width: 140px;
+}
+
+.actions-cell {
+  text-align: center;
+  width: 100px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #5a67d8;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #667eea;
+  border: 1px solid #667eea;
+}
+
+.btn-outline-primary:hover {
+  background: #667eea;
+  color: white;
+}
+
+.btn-outline-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Edit Form Styles */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coefficient-inputs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.coeff-input {
+  width: 70px;
+  padding: 4px 6px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.coeff-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Pagination Styles */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.page-info {
+  font-size: 14px;
+  font-weight: bold;
+  color: #495057;
+}
+
+/* Instructions Styles */
+.list-instructions {
+  margin-top: 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.list-instructions p {
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  color: #495057;
+}
+
+.list-instructions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.list-instructions li {
+  margin: 5px 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Responsive Design for Table */
+@media (max-width: 768px) {
+  .equation-table {
+    font-size: 12px;
+  }
+  
+  .equation-table th,
+  .equation-table td {
+    padding: 8px 4px;
+  }
+  
+  .equation-cell {
+    min-width: 150px;
+    font-size: 11px;
+  }
+  
+  .solution-cell {
+    min-width: 120px;
+    font-size: 11px;
+  }
+  
+  .time-cell {
+    font-size: 10px;
+    width: 100px;
+  }
+  
+  .coefficient-inputs {
+    flex-direction: column;
+  }
+  
+  .coeff-input {
+    width: 100%;
+  }
+  
+  .pagination-container {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .row-actions,
+  .edit-actions {
+    flex-direction: column;
+    gap: 3px;
+  }
+}
+
+/* Loading state for table */
+.table-loading {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+/* Empty state */
+.table-empty {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+/* Hover effects for better UX */
+.equation-table tbody tr:hover .btn-sm {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.equation-table tbody tr .btn-sm {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+/* Striped rows for better readability */
+.equation-table tbody tr:nth-child(even) {
+  background-color: rgba(0,0,0,0.02);
+}
+
+.equation-table tbody tr:nth-child(even):hover {
+  background-color: #f8f9fa;
+}
