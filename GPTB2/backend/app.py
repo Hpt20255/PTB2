@@ -1,4 +1,5 @@
 import os
+import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -12,6 +13,24 @@ app = Flask(__name__)
 
 # Enable CORS for all routes
 CORS(app)
+
+# Configure DEBUG mode and logging
+DEBUG_MODE = os.getenv('DEBUG', 'false').lower() == 'true'
+app.config['DEBUG'] = DEBUG_MODE
+
+if DEBUG_MODE:
+    # Configure debug logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    app.logger.setLevel(logging.DEBUG)
+    
+    print("🐛 DEBUG MODE ENABLED - Flask Debug Logging Active")
+    print("=" * 50)
+else:
+    logging.basicConfig(level=logging.INFO)
+    print("📊 PRODUCTION MODE - Standard Logging Active")
 
 # Database configuration from environment variables
 DB_HOST = os.getenv('DB_HOST', 'localhost')
@@ -41,11 +60,30 @@ db.init_app(app)
 @app.route('/ping', methods=['GET'])
 def ping():
     """Basic health check endpoint"""
-    return jsonify({
+    if DEBUG_MODE:
+        app.logger.debug("🐛 DEBUG: /ping endpoint called")
+        app.logger.debug(f"🐛 DEBUG: Request method: {request.method}")
+        app.logger.debug(f"🐛 DEBUG: Request headers: {dict(request.headers)}")
+        print("🐛 DEBUG LOG: /ping endpoint accessed in debug mode")
+    
+    response_data = {
         'message': 'pong',
         'status': 'success',
-        'database_configured': True
-    })
+        'database_configured': True,
+        'debug_mode': DEBUG_MODE
+    }
+    
+    if DEBUG_MODE:
+        response_data['debug_info'] = {
+            'flask_debug': app.config.get('DEBUG', False),
+            'environment_debug': os.getenv('DEBUG', 'false'),
+            'flask_env': os.getenv('FLASK_ENV', 'production'),
+            'log_level': logging.getLogger().getEffectiveLevel(),
+            'timestamp': __import__('datetime').datetime.now().isoformat()
+        }
+        app.logger.debug(f"🐛 DEBUG: Response data: {response_data}")
+    
+    return jsonify(response_data)
 
 @app.route('/test-db', methods=['GET'])
 def test_database_connection():

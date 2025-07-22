@@ -16,6 +16,22 @@ const App: React.FC = () => {
     message: string;
   } | null>(null);
 
+  // Debug mode detection
+  const isDebugMode = process.env.REACT_APP_ENV === 'development' || 
+                     process.env.NODE_ENV === 'development' ||
+                     window.location.hostname === 'localhost';
+  
+  // Debug logging
+  if (isDebugMode) {
+    console.log('🐛 DEBUG MODE ENABLED - React Debug Logging Active');
+    console.log('🐛 Environment variables:', {
+      REACT_APP_ENV: process.env.REACT_APP_ENV,
+      NODE_ENV: process.env.NODE_ENV,
+      REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+      hostname: window.location.hostname
+    });
+  }
+
   // Check API connection on component mount
   useEffect(() => {
     checkApiConnection();
@@ -104,6 +120,32 @@ const App: React.FC = () => {
 
   return (
     <div className="container">
+      {/* Debug Mode Banner */}
+      {isDebugMode && (
+        <div style={{
+          background: 'linear-gradient(45deg, #ff6b6b, #feca57)',
+          color: 'white',
+          padding: '15px',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          textAlign: 'center',
+          fontWeight: 'bold',
+          fontSize: '16px',
+          textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
+          border: '2px solid #ff4757',
+          animation: 'pulse 2s infinite'
+        }}>
+          🐛 DEBUG ON - React Development Mode Active
+          <div style={{ 
+            fontSize: '14px', 
+            marginTop: '5px',
+            opacity: 0.9
+          }}>
+            Environment: {process.env.NODE_ENV} | API: {process.env.REACT_APP_API_URL || 'http://localhost:5000'}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center mb-3">
         <h1 style={{ 
