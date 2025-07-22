@@ -1,4 +1,7 @@
-# GPTB2 Backend Requirements
+# GPTB2 Backend Requirements - Updated for Task 3.1
+# Generated on: 2024-07-22
+# Python Version: 3.12.11
+
 # Core Flask dependencies for web framework
 Flask==2.3.3
 Flask-Cors==4.0.0
@@ -23,3 +26,10 @@ Jinja2==3.1.6
 MarkupSafe==3.0.2
 blinker==1.9.0
 greenlet==3.2.2
+
+# Additional dependencies for enhanced environment support
+# (These may be added in future tasks)
+# gunicorn==21.2.0          # Production WSGI server
+# python-decouple==3.8      # Alternative environment management
+# marshmallow==3.20.1       # Serialization/deserialization
+# flask-migrate==4.0.5      # Database migrations

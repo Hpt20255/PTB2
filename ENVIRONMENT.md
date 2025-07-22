@@ -59,34 +59,123 @@ Interactive features      # Clickable history, toggle steps
 - **Package file**: `/frontend/package.json`
 - **Lock file**: `/frontend/package-lock.json`
 
-## 🔧 Environment Variables
+## 🔧 Environment Variables - Updated Task 3.1
 
-### Backend (.env)
+### Main Environment (.env) - Docker Compose
 ```bash
-# Database Configuration
-DB_HOST=mysql                    # MySQL server hostname
-DB_PORT=3306                     # MySQL port
-DB_NAME=gptb2_db                 # Database name
-DB_USER=root                     # Database username
-DB_PASSWORD=password123          # Database password
+# Database Configuration (MySQL Container)
+DB_HOST=mysql                           # MySQL server hostname
+DB_PORT=3306                           # MySQL port
+DB_NAME=gptb2_db                       # Database name
+DB_USER=root                           # Database username
+DB_PASSWORD=gptb2_secure_password_2024 # Database password
 
-# Flask Configuration
-FLASK_ENV=development            # Development mode
-FLASK_DEBUG=True                 # Debug mode enabled
-FLASK_APP=app.py                 # Main application file
+# Application Configuration
+DEBUG=true                             # Debug mode
+PORT=5000                             # Backend port
+FRONTEND_PORT=3000                    # Frontend port
 
-# API Configuration
-API_HOST=0.0.0.0                 # Listen on all interfaces
-API_PORT=5000                    # Backend API port
+# Security Configuration
+SECRET_KEY=gptb2-production-secret-key-change-in-production
+
+# Network Configuration
+CORS_ORIGINS=http://localhost:3000,http://localhost:80
+
+# Logging Configuration
+LOG_LEVEL=INFO
+FLASK_ENV=development
 ```
 
-### Frontend (.env)
+### Backend Environment (backend/.env) - Local Development
+```bash
+# Database Configuration (Local Development)
+DB_HOST=localhost                      # Local MySQL server
+DB_PORT=3306                          # MySQL port
+DB_NAME=gptb2_db                      # Database name
+DB_USER=root                          # Database username
+DB_PASSWORD=gptb2_secure_password_2024 # Database password
+
+# Flask Configuration
+FLASK_ENV=development                  # Development mode
+FLASK_DEBUG=true                      # Debug mode enabled
+FLASK_APP=app.py                      # Main application file
+SECRET_KEY=gptb2-backend-secret-key-for-development-only
+PORT=5000                             # Backend port
+
+# SQLAlchemy Configuration
+SQLALCHEMY_TRACK_MODIFICATIONS=false
+SQLALCHEMY_ECHO=false
+
+# API Configuration
+API_HOST=0.0.0.0                      # Listen on all interfaces
+API_PORT=5000                         # Backend API port
+CORS_ORIGINS=http://localhost:3000,http://localhost:80,https://work-1-tuiizqscseouvpfk.prod-runtime.all-hands.dev,https://work-2-tuiizqscseouvpfk.prod-runtime.all-hands.dev
+
+# Logging Configuration
+LOG_LEVEL=DEBUG
+LOG_FORMAT=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+
+# Development Features
+ENABLE_SWAGGER=true
+ENABLE_DEBUG_TOOLBAR=false
+
+# Database Connection Pool
+SQLALCHEMY_POOL_SIZE=10
+SQLALCHEMY_POOL_TIMEOUT=20
+SQLALCHEMY_POOL_RECYCLE=3600
+```
+
+### Frontend Environment (frontend/.env) - Local Development
 ```bash
 # API Configuration
 REACT_APP_API_URL=http://localhost:5000  # Backend API endpoint
+REACT_APP_API_TIMEOUT=10000              # API timeout in milliseconds
+
+# Development Configuration
 REACT_APP_DEBUG=true                     # Debug mode
+REACT_APP_ENV=development                # Environment
 PORT=3000                                # Frontend development server port
+HOST=0.0.0.0                            # Listen on all interfaces
+
+# Feature Flags
+REACT_APP_ENABLE_ANALYTICS=false
+REACT_APP_ENABLE_ERROR_REPORTING=true
+REACT_APP_ENABLE_PERFORMANCE_MONITORING=false
+
+# UI Configuration
+REACT_APP_THEME=default
+REACT_APP_LANGUAGE=vi
+REACT_APP_TIMEZONE=Asia/Ho_Chi_Minh
+
+# Build Configuration
+GENERATE_SOURCEMAP=true
+REACT_APP_BUILD_VERSION=1.0.0
+REACT_APP_BUILD_DATE=2024-07-22
+
+# Development Server Configuration
+FAST_REFRESH=true
+ESLINT_NO_DEV_ERRORS=true
+DISABLE_ESLINT_PLUGIN=false
+
+# Browser Configuration
+BROWSER=none
+OPEN_BROWSER=false
+
+# Advanced Configuration
+REACT_APP_EQUATION_HISTORY_LIMIT=50
+REACT_APP_AUTO_SAVE_INTERVAL=30000
+REACT_APP_NOTIFICATION_TIMEOUT=5000
 ```
+
+### Environment Files Available
+- `.env` - Main Docker Compose configuration
+- `backend/.env` - Backend development configuration
+- `frontend/.env` - Frontend development configuration
+- `.env.production` - Production Docker Compose configuration
+- `backend/.env.production` - Backend production configuration
+- `frontend/.env.production` - Frontend production configuration
+- `.env.testing` - Testing environment configuration
+- `.env.example` - Example template for new setups
 
 ## 🌐 Network Configuration
 
