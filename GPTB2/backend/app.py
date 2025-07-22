@@ -248,6 +248,287 @@ def get_equation(equation_id):
             'error': str(e)
         }), 500
 
+@app.route('/api/equation/<int:equation_id>', methods=['PUT'])
+def update_equation(equation_id):
+    """
+    Update existing equation with new coefficients and re-solve
+    Expected JSON: {"a": float, "b": float, "c": float}
+    """
+    try:
+        # Find existing equation
+        equation = Equation.query.get(equation_id)
+        
+        if not equation:
+            return jsonify({
+                'message': f'Equation with ID {equation_id} not found',
+                'status': 'error'
+            }), 404
+        
+        # Validate request content type
+        if not request.is_json:
+            return jsonify({
+                'message': 'Content-Type must be application/json',
+                'status': 'error'
+            }), 400
+        
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['a', 'b', 'c']
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            return jsonify({
+                'message': f'Missing required fields: {", ".join(missing_fields)}',
+                'status': 'error',
+                'required_fields': required_fields
+            }), 400
+        
+        # Validate field types and convert to float
+        try:
+            new_a = float(data['a'])
+            new_b = float(data['b'])
+            new_c = float(data['c'])
+        except (ValueError, TypeError) as e:
+            return jsonify({
+                'message': 'Coefficients a, b, c must be valid numbers',
+                'status': 'error',
+                'error': str(e)
+            }), 400
+        
+        # Store old values for response
+        old_values = {
+            'a': equation.a,
+            'b': equation.b,
+            'c': equation.c,
+            'solution': equation.solution,
+            'solution_type': equation.solution_type
+        }
+        
+        # Update coefficients and re-solve
+        equation.a = new_a
+        equation.b = new_b
+        equation.c = new_c
+        equation.solve_equation()  # Re-calculate solution
+        
+        # Save to database
+        try:
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Equation updated and re-solved successfully',
+                'status': 'success',
+                'data': equation.to_dict(),
+                'previous_values': {
+                    'equation_string': f"{old_values['a']}x² + {old_values['b']}x + {old_values['c']} = 0",
+                    'solution': old_values['solution'],
+                    'solution_type': old_values['solution_type']
+                }
+            }), 200
+            
+        except Exception as db_error:
+            db.session.rollback()
+            return jsonify({
+                'message': 'Equation updated but database save failed',
+                'status': 'partial_success',
+                'data': equation.to_dict(),
+                'database_error': str(db_error)
+            }), 200
+            
+    except Exception as e:
+        return jsonify({
+            'message': 'Failed to update equation',
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/equation/<int:equation_id>', methods=['DELETE'])
+def delete_equation(equation_id):
+    """Delete equation by ID"""
+    try:
+        # Find existing equation
+        equation = Equation.query.get(equation_id)
+        
+        if not equation:
+            return jsonify({
+                'message': f'Equation with ID {equation_id} not found',
+                'status': 'error'
+            }), 404
+        
+        # Store equation data for response before deletion
+        equation_data = equation.to_dict()
+        
+        # Delete from database
+        try:
+            db.session.delete(equation)
+            db.session.commit()
+            
+            return jsonify({
+                'message': f'Equation with ID {equation_id} deleted successfully',
+                'status': 'success',
+                'deleted_equation': equation_data
+            }), 200
+            
+        except Exception as db_error:
+            db.session.rollback()
+            return jsonify({
+                'message': 'Failed to delete equation from database',
+                'status': 'error',
+                'error': str(db_error)
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'message': 'Failed to delete equation',
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/equations/bulk', methods=['POST'])
+def create_bulk_equations():
+    """
+    Create multiple equations at once
+    Expected JSON: {"equations": [{"a": float, "b": float, "c": float}, ...]}
+    """
+    try:
+        if not request.is_json:
+            return jsonify({
+                'message': 'Content-Type must be application/json',
+                'status': 'error'
+            }), 400
+        
+        data = request.get_json()
+        
+        if 'equations' not in data or not isinstance(data['equations'], list):
+            return jsonify({
+                'message': 'Request must contain "equations" array',
+                'status': 'error'
+            }), 400
+        
+        if len(data['equations']) == 0:
+            return jsonify({
+                'message': 'Equations array cannot be empty',
+                'status': 'error'
+            }), 400
+        
+        if len(data['equations']) > 50:  # Limit bulk operations
+            return jsonify({
+                'message': 'Maximum 50 equations allowed per bulk operation',
+                'status': 'error'
+            }), 400
+        
+        created_equations = []
+        errors = []
+        
+        for i, eq_data in enumerate(data['equations']):
+            try:
+                # Validate each equation
+                required_fields = ['a', 'b', 'c']
+                missing_fields = [field for field in required_fields if field not in eq_data]
+                
+                if missing_fields:
+                    errors.append({
+                        'index': i,
+                        'error': f'Missing required fields: {", ".join(missing_fields)}'
+                    })
+                    continue
+                
+                # Convert to float
+                a = float(eq_data['a'])
+                b = float(eq_data['b'])
+                c = float(eq_data['c'])
+                
+                # Create equation
+                equation = Equation(a=a, b=b, c=c)
+                db.session.add(equation)
+                created_equations.append(equation)
+                
+            except (ValueError, TypeError) as e:
+                errors.append({
+                    'index': i,
+                    'error': f'Invalid coefficients: {str(e)}'
+                })
+            except Exception as e:
+                errors.append({
+                    'index': i,
+                    'error': str(e)
+                })
+        
+        # Commit all valid equations
+        try:
+            if created_equations:
+                db.session.commit()
+                
+            return jsonify({
+                'message': f'Bulk operation completed: {len(created_equations)} created, {len(errors)} errors',
+                'status': 'success' if len(errors) == 0 else 'partial_success',
+                'created_count': len(created_equations),
+                'error_count': len(errors),
+                'created_equations': [eq.to_dict() for eq in created_equations],
+                'errors': errors
+            }), 201 if len(errors) == 0 else 200
+            
+        except Exception as db_error:
+            db.session.rollback()
+            return jsonify({
+                'message': 'Bulk operation failed during database save',
+                'status': 'error',
+                'error': str(db_error)
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'message': 'Bulk operation failed',
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/equations/stats', methods=['GET'])
+def get_equation_stats():
+    """Get statistics about equations in database"""
+    try:
+        total_count = Equation.query.count()
+        
+        if total_count == 0:
+            return jsonify({
+                'message': 'No equations found in database',
+                'status': 'success',
+                'stats': {
+                    'total_equations': 0,
+                    'by_solution_type': {},
+                    'latest_equation': None
+                }
+            })
+        
+        # Count by solution type
+        from sqlalchemy import func
+        solution_type_counts = db.session.query(
+            Equation.solution_type,
+            func.count(Equation.id)
+        ).group_by(Equation.solution_type).all()
+        
+        by_solution_type = {solution_type: count for solution_type, count in solution_type_counts}
+        
+        # Get latest equation
+        latest_equation = Equation.query.order_by(Equation.created_at.desc()).first()
+        
+        return jsonify({
+            'message': f'Retrieved statistics for {total_count} equations',
+            'status': 'success',
+            'stats': {
+                'total_equations': total_count,
+                'by_solution_type': by_solution_type,
+                'latest_equation': latest_equation.to_dict() if latest_equation else None
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'message': 'Failed to retrieve equation statistics',
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Test database connection and model on startup
     print("\n=== TESTING DATABASE CONNECTION ===")
