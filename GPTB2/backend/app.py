@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 from models import db, Equation
@@ -129,6 +129,121 @@ def test_equation_model():
     except Exception as e:
         return jsonify({
             'message': 'Equation model test failed',
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/equation', methods=['POST'])
+def create_equation():
+    """
+    Create new equation and solve it
+    Expected JSON: {"a": float, "b": float, "c": float}
+    """
+    try:
+        # Validate request content type
+        if not request.is_json:
+            return jsonify({
+                'message': 'Content-Type must be application/json',
+                'status': 'error'
+            }), 400
+        
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['a', 'b', 'c']
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            return jsonify({
+                'message': f'Missing required fields: {", ".join(missing_fields)}',
+                'status': 'error',
+                'required_fields': required_fields
+            }), 400
+        
+        # Validate field types and convert to float
+        try:
+            a = float(data['a'])
+            b = float(data['b'])
+            c = float(data['c'])
+        except (ValueError, TypeError) as e:
+            return jsonify({
+                'message': 'Coefficients a, b, c must be valid numbers',
+                'status': 'error',
+                'error': str(e)
+            }), 400
+        
+        # Create and solve equation
+        equation = Equation(a=a, b=b, c=c)
+        
+        # Save to database
+        try:
+            db.session.add(equation)
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Equation created and solved successfully',
+                'status': 'success',
+                'data': equation.to_dict()
+            }), 201
+            
+        except Exception as db_error:
+            db.session.rollback()
+            # Return equation data even if database save fails
+            return jsonify({
+                'message': 'Equation solved but database save failed',
+                'status': 'partial_success',
+                'data': equation.to_dict(),
+                'database_error': str(db_error)
+            }), 200
+            
+    except Exception as e:
+        return jsonify({
+            'message': 'Failed to create equation',
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/equation', methods=['GET'])
+def get_all_equations():
+    """Get all equations from database"""
+    try:
+        equations = Equation.query.order_by(Equation.created_at.desc()).all()
+        
+        return jsonify({
+            'message': f'Retrieved {len(equations)} equations',
+            'status': 'success',
+            'count': len(equations),
+            'data': [eq.to_dict() for eq in equations]
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'message': 'Failed to retrieve equations',
+            'status': 'error',
+            'error': str(e)
+        }), 500
+
+@app.route('/api/equation/<int:equation_id>', methods=['GET'])
+def get_equation(equation_id):
+    """Get specific equation by ID"""
+    try:
+        equation = Equation.query.get(equation_id)
+        
+        if not equation:
+            return jsonify({
+                'message': f'Equation with ID {equation_id} not found',
+                'status': 'error'
+            }), 404
+        
+        return jsonify({
+            'message': 'Equation retrieved successfully',
+            'status': 'success',
+            'data': equation.to_dict()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'message': 'Failed to retrieve equation',
             'status': 'error',
             'error': str(e)
         }), 500
