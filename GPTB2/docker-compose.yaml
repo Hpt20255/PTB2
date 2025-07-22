@@ -1,49 +1,135 @@
+# GPTB2 Docker Compose Configuration - Task 3.4
+# Orchestrates MySQL, Backend (Flask), and Frontend (React/Nginx)
+# Production-ready with health checks, restart policies, and optimized networking
+
 version: '3.8'
 
 services:
+  # ================================
+  # MySQL Database Service
+  # ================================
   mysql:
     image: mysql:8.0
     container_name: gptb2_mysql
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-gptb2_secure_password}
+      MYSQL_DATABASE: ${DB_NAME:-gptb2_db}
+      MYSQL_USER: ${DB_USER:-gptb2_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-gptb2_secure_password}
+      MYSQL_ROOT_HOST: '%'
     ports:
-      - "3306:3306"
+      - "${DB_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - mysql_config:/etc/mysql/conf.d
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
     networks:
       - gptb2_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-gptb2_secure_password}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --bind-address=0.0.0.0
+      --max_connections=200
+      --innodb_buffer_pool_size=256M
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
 
+  # ================================
+  # Backend Flask API Service
+  # ================================
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: gptb2_backend
+    restart: unless-stopped
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DEBUG=${DEBUG}
+      # Database Configuration
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-gptb2_db}
+      - DB_USER=${DB_USER:-gptb2_user}
+      - DB_PASSWORD=${DB_PASSWORD:-gptb2_secure_password}
+      
+      # Flask Configuration
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - FLASK_APP=app.py
+      - DEBUG=${DEBUG:-false}
+      - PORT=5000
+      
+      # Security
+      - SECRET_KEY=${SECRET_KEY:-gptb2_super_secret_key_change_in_production}
+      
+      # CORS Configuration
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,http://localhost:3000,http://localhost:80}
     ports:
-      - "${PORT}:5000"
+      - "${BACKEND_PORT:-5000}:5000"
+    volumes:
+      - ./backend/logs:/app/logs
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - gptb2_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
+  # ================================
+  # Frontend React/Nginx Service
+  # ================================
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: gptb2_frontend
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:5000}
+      - REACT_APP_ENV=${REACT_APP_ENV:-production}
     ports:
-      - "${FRONTEND_PORT}:80"
+      - "${FRONTEND_PORT:-80}:80"
+    volumes:
+      - ./frontend/nginx/logs:/var/log/nginx
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - gptb2_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
+# ================================
+# Persistent Volumes
+# ================================
 volumes:
   mysql_data:
+    driver: local
+    name: gptb2_mysql_data
+  mysql_config:
+    driver: local
+    name: gptb2_mysql_config
 
+# ================================
+# Networks
+# ================================
 networks:
   gptb2_network:
     driver: bridge
+    name: gptb2_network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
